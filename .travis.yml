@@ -1,0 +1,17 @@
+before_install:
+  - sudo apt-get update
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install libmicrohttpd-dev
+  - sudo apt-get install -qq g++-4.8
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+
+before_script:
+  - sh utils/libhttpserver.sh
+
+script:
+  - mkdir build && cd build
+  - cmake ..
+  - make
