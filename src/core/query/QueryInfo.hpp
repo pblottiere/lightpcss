@@ -7,6 +7,7 @@
 #pragma once
 
 #include "../Query.hpp"
+#include "../Database.hpp"
 
 class QueryInfo : public Query
 {
@@ -14,5 +15,6 @@ class QueryInfo : public Query
     QueryInfo();
     ~QueryInfo();
 
-    void execute() override;
+  protected:
+    bool run( Database *db ) override;
 };

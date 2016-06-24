@@ -8,16 +8,10 @@
 
 Query::Query()
   : _result("")
-  , _database("")
-  , _is_valid(false)
 {
 }
 
 Query::~Query()
-{
-}
-
-void Query::execute()
 {
 }
 
@@ -26,7 +20,7 @@ std::string Query::result()
   return _result;
 }
 
-bool Query::is_valid()
+bool Query::run( Database *db )
 {
-  return _is_valid;
+  return false;
 }

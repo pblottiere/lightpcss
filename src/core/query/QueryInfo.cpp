@@ -17,7 +17,9 @@ QueryInfo::~QueryInfo()
 {
 }
 
-void QueryInfo::execute()
+bool QueryInfo::run( Database *db )
 {
-  std::cout << "query info!" << std::endl;
+  std::cout << "QueryInfo!!!!" << std::endl;
+  std::cout << "Number of points: " << db->npoints() << std::endl;;
+  return true;
 }

@@ -16,6 +16,7 @@ set (CORE_DIR ${PROJECT_SOURCE_DIR}/src/core)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 find_package ( LibHttpServer REQUIRED )
+find_package ( Postgres REQUIRED )
 
 #------------------------------------------------------------------------------
 # SUBDIRS

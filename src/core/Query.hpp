@@ -8,24 +8,23 @@
 
 #include <string>
 
+class Database;
+
 class Query
 {
   public:
     Query();
     ~Query();
 
-    virtual void execute();
     std::string result();
 
-    /**
-     * Returns the semantic validity of the query
-     */
-    bool is_valid();
+  protected:
+    virtual bool run( Database *db );
 
-  private:
+    std::string _table;
     std::string _result;
-    std::string _database;
-    bool _is_valid;
+    std::string _column;
 
-  friend class QueryFactory;
+    friend Database;
+    friend class QueryFactory;
 };

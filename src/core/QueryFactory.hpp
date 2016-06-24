@@ -7,12 +7,12 @@
 #pragma once
 
 #include <memory>
-#include <httpserver.hpp>
 
+#include "Request.hpp"
 #include "Query.hpp"
 
 class QueryFactory
 {
   public:
-    static std::unique_ptr<Query> make( const httpserver::http_request &req );
+    static std::unique_ptr<Query> make( const Request &req );
 };
