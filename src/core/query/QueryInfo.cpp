@@ -5,6 +5,7 @@
  */
 
 #include <iostream>
+#include <algorithm>
 #include <jsoncpp/json/json.h>
 
 #include "QueryInfo.hpp"
@@ -50,21 +51,26 @@ bool QueryInfo::run( Database *db )
   bool rc = false;
 
   int npoints = db->npoints();
+  std::string schema = db->schema();
 
-  if ( npoints != -1 )
+  std::cout << "Schema: " << schema << std::endl;
+
+  if ( npoints != -1 && schema.size() > 0 )
   {
-    format_json_result( npoints );
+    format_json_result( npoints, schema );
     rc = true;
   }
 
   return true;
 }
 
-void QueryInfo::format_json_result( int npoints )
+void QueryInfo::format_json_result( int npoints, const std::string &schema )
 {
   Json::Value root;
   root["numPoints"] = npoints;
+  root["schema"] = schema;
 
   Json::StyledWriter writer;
   _result = writer.write( root );
+  clean_json( _result );
 }

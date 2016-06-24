@@ -24,6 +24,7 @@ class Database
     bool execute( Query &query );
 
     int32_t npoints();
+    std::string schema();
 
   private:
     bool get_res( const std::string &sql );
