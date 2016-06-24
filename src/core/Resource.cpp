@@ -16,6 +16,8 @@ using namespace httpserver;
 void Resource::render( const http_request& hreq, http_response** res )
 {
   Request req( hreq );
+  std::string result( "" );
+  int code( 200 );
 
   if ( req.is_valid() )
   {
@@ -24,20 +26,26 @@ void Resource::render( const http_request& hreq, http_response** res )
     Database db;
     if ( db.connect( "lids_toulouse_compressed_dimensional" ) )
     {
-      db.execute( *query );
+      if ( db.execute( *query ) )
+        result = query->result();
+      else
+      {
+        result = "Query failed";
+        code = 500;
+      }
       db.disconnect();
     }
     else
     {
-      std::cout << "Connection failed!" << std::endl;
-      // return an error
+      result = "Connection failed";
+      code = 500;
     }
   }
   else
   {
-    std::cout << "Invalid request!" << std::endl;
-    // return an error
+    result = "Invalid request";
+    code = 500;
   }
 
-  //*res = new http_response(http_response_builder("todo", 200).string_response());
+  *res = new http_response(http_response_builder(result, code).string_response());
 }

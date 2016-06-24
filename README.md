@@ -3,9 +3,10 @@ Light Pointcloud Streaming Server
 
 ## Requirements
 
-* libpqxx
+* libpq
 * libmicrohttpd >= 0.9.37
 * libhttpserver
+* libjsoncpp
 
 ## Compilation
 

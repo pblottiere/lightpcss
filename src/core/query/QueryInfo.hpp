@@ -17,4 +17,7 @@ class QueryInfo : public Query
 
   protected:
     bool run( Database *db ) override;
+
+  private:
+    void format_json_result( int npoints );
 };
