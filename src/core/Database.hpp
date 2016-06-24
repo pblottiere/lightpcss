@@ -35,6 +35,8 @@ class Database
     int32_t npoints();
     std::string schema();
     bool bounding_box( BoundingBox &box );
+    int32_t srs_id();
+    std::string srs();
 
   private:
     bool get_res( const std::string &sql );

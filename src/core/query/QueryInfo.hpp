@@ -20,5 +20,5 @@ class QueryInfo : public Query
 
   private:
     void format_json_result( int npoints, const std::string &schema,
-        const BoundingBox &box );
+        const BoundingBox &box, const std::string &srs );
 };

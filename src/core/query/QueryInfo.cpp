@@ -51,28 +51,29 @@ bool QueryInfo::run( Database *db )
   bool rc = false;
 
   int npoints = db->npoints();
-  std::string schema = db->schema();
-  BoundingBox box;
-  bool box_ok = db->bounding_box( box );
 
-  if ( npoints != -1 && schema.size() > 0 && box_ok )
+  if ( npoints > 0 )
   {
-    format_json_result( npoints, schema, box );
-    rc = true;
+    std::string schema = db->schema();
+    BoundingBox box;
+    bool box_ok = db->bounding_box( box );
+    std::string srs = db->srs();
+
+    if ( schema.size() > 0 && box_ok && srs.size() > 0 )
+    {
+      format_json_result( npoints, schema, box, srs );
+      rc = true;
+    }
   }
 
   return rc;
 }
 
 void QueryInfo::format_json_result( int npoints, const std::string &schema,
-   const BoundingBox &box )
+   const BoundingBox &box, const std::string &srs )
 {
   Json::FastWriter writer;
   Json::Value root;
-
-  root["numPoints"] = npoints;
-  root["schema"] = schema;
-  root["type"] = "octree";
 
   Json::Value root_bounds;
   root_bounds.append( box.xmin );
@@ -81,6 +82,13 @@ void QueryInfo::format_json_result( int npoints, const std::string &schema,
   root_bounds.append( box.ymax );
   root_bounds.append( box.zmax );
   root["bounds"] = root_bounds;
+
+  root["numPoints"] = npoints;
+  root["schema"] = schema;
+
+  root["srs"] = srs;
+
+  root["type"] = "octree";
 
   _result = writer.write( root );
   clean_json( _result );

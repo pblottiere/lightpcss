@@ -164,6 +164,39 @@ bool Database::bounding_box( BoundingBox &box )
   return rc;
 }
 
+int32_t Database::srs_id()
+{
+  std::string sql = "select PC_Summary("
+    + _column + ")::json->'srid' from "
+    + _table + " where id = 1;";
+
+  int id = -1;
+  if ( get_res( sql ) )
+  {
+    char *id_str = PQgetvalue( _res, 0, 0 ) ;
+    id = atoi( id_str );
+  }
+  clear_res();
+
+  return id;
+}
+
+std::string Database::srs()
+{
+  std::string srs_str;
+  std::string sql = "select srtext from spatial_ref_sys where srid = "
+    + std::to_string( srs_id() ) + ";";
+
+  if ( get_res( sql ) )
+  {
+    char *srs = PQgetvalue( _res, 0, 0 ) ;
+    srs_str = srs;
+  }
+  clear_res();
+
+  return srs_str;
+}
+
 bool Database::get_res( const std::string &sql )
 {
   bool rc = false;
