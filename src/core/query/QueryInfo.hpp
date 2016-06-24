@@ -19,5 +19,6 @@ class QueryInfo : public Query
     bool run( Database *db ) override;
 
   private:
-    void format_json_result( int npoints, const std::string &schema );
+    void format_json_result( int npoints, const std::string &schema,
+        const BoundingBox &box );
 };

@@ -52,25 +52,36 @@ bool QueryInfo::run( Database *db )
 
   int npoints = db->npoints();
   std::string schema = db->schema();
+  BoundingBox box;
+  bool box_ok = db->bounding_box( box );
 
-  std::cout << "Schema: " << schema << std::endl;
-
-  if ( npoints != -1 && schema.size() > 0 )
+  if ( npoints != -1 && schema.size() > 0 && box_ok )
   {
-    format_json_result( npoints, schema );
+    format_json_result( npoints, schema, box );
     rc = true;
   }
 
-  return true;
+  return rc;
 }
 
-void QueryInfo::format_json_result( int npoints, const std::string &schema )
+void QueryInfo::format_json_result( int npoints, const std::string &schema,
+   const BoundingBox &box )
 {
+  Json::FastWriter writer;
   Json::Value root;
+
   root["numPoints"] = npoints;
   root["schema"] = schema;
+  root["type"] = "octree";
 
-  Json::StyledWriter writer;
+  Json::Value root_bounds;
+  root_bounds.append( box.xmin );
+  root_bounds.append( box.xmax );
+  root_bounds.append( box.ymin );
+  root_bounds.append( box.ymax );
+  root_bounds.append( box.zmax );
+  root["bounds"] = root_bounds;
+
   _result = writer.write( root );
   clean_json( _result );
 }

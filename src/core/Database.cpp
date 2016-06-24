@@ -96,12 +96,12 @@ std::string Database::schema()
         if ( reader_dim.parse( dim, root_dim ) )
         {
           std::string name = root_dim.get("name", "").asString();
-          std::string size = root_dim.get("size", "").asString();
+          int32_t size = root_dim.get("size", "").asInt();
           std::string type = root_dim.get("type", "").asString();
 
           root_schema_dim["name"] = name;
           root_schema_dim["size"] = size;
-          root_schema_dim["type"] = type;
+          root_schema_dim["type"] = potree_type(type);
 
           root_schema.append( writer.write( root_schema_dim ) );
         }
@@ -112,6 +112,56 @@ std::string Database::schema()
   clear_res();
 
   return writer.write( root_schema );
+}
+
+std::string Database::potree_type( const std::string &pc_type )
+{
+  // TODO : to complete
+  std::string potree_type = "signed";
+
+  if ( pc_type == "double" )
+    potree_type = "floating";
+  else if ( pc_type == "int32_t" )
+    potree_type = "signed";
+
+  return potree_type;
+}
+
+bool Database::bounding_box( BoundingBox &box )
+{
+  bool rc = false;
+
+  std::string sql = "select min( pc_patchmin(" + _column + ", 'y') ) as ymin"
+    + ", max( pc_patchmax(" + _column + ", 'y') ) as ymax"
+    + ", min( pc_patchmin(" + _column + ", 'x') ) as xmin"
+    + ", max( pc_patchmax(" + _column + ", 'x') ) as xmax"
+    + ", max( pc_patchmax(" + _column + ", 'z') ) as zmax"
+    + " from " + _table + ";";
+
+  if ( get_res( sql ) )
+  {
+    int nfields = PQnfields( _res );
+    if ( nfields == 5 )
+    {
+      std::string xmin = PQgetvalue( _res, 0, 0 );
+      std::string xmax = PQgetvalue( _res, 0, 1 );
+      std::string ymin = PQgetvalue( _res, 0, 2 );
+      std::string ymax = PQgetvalue( _res, 0, 3 );
+      std::string zmax = PQgetvalue( _res, 0, 4 );
+
+      box.xmin = atof( xmin.c_str() );
+      box.xmax = atof( xmax.c_str() );
+      box.ymin = atof( ymin.c_str() );
+      box.ymax = atof( ymax.c_str() );
+      box.zmax = atof( zmax.c_str() );
+
+      rc = true;
+    }
+  }
+
+  clear_res();
+
+  return rc;
 }
 
 bool Database::get_res( const std::string &sql )
