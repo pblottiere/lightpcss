@@ -7,6 +7,7 @@
 #include "QueryFactory.hpp"
 #include "query/QueryInfo.hpp"
 #include "query/QueryRead.hpp"
+#include "query/QueryHierarchy.hpp"
 #include "Logger.hpp"
 
 std::unique_ptr<Query> QueryFactory::make( const Request &req )
@@ -26,6 +27,15 @@ std::unique_ptr<Query> QueryFactory::make( const Request &req )
     {
       query.reset( new QueryRead );
       logger.info( "Query type: Read" );
+
+      std::map<std::string, std::string, httpserver::http::arg_comparator> par;
+      req.params( par );
+      query->_params = par;
+    }
+    else if ( req.query_name() == "hierarchy" )
+    {
+      query.reset( new QueryHierarchy );
+      logger.info( "Query type: Hierarchy" );
 
       std::map<std::string, std::string, httpserver::http::arg_comparator> par;
       req.params( par );

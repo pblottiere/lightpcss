@@ -174,28 +174,24 @@ Point Point::from_pc_json( const std::string &json, const Schema &sch )
 std::vector<unsigned char> Point::get_dim_hex( const Dimension &d ) const
 {
   std::vector<unsigned char> bytes;
-  size_t pos = find(schema.dimensions_order.begin(),
-      schema.dimensions_order.end(), d.name) - schema.dimensions_order.begin();
+  //size_t pos = find(schema.dimensions_order.begin(),
+  //    schema.dimensions_order.end(), d.name) - schema.dimensions_order.begin();
 
-  if ( pos != schema.dimensions_order.size() )
-  {
-    std::string datastr = data[pos];
-    std::cout << "datastr for: " << d.name << " is " << datastr << std::endl;
-    std::cout << "dim size: " << d.size << std::endl;
+  //if ( pos != schema.dimensions_order.size() )
+  //{
+  //  std::string datastr = data[pos];
 
-    float f = atof( datastr.c_str() );
-    std::cout << f << std::endl;
-    unsigned char *ptr = (unsigned char *)&f;
+  //  float f = atof( datastr.c_str() );
+  //  unsigned char *ptr = (unsigned char *)&f;
 
-    std::cout << "size: " << bytes.size() << std::endl;
 
-    for (int i=0; i<sizeof(int32_t); i++)
-      printf("%02x ", ptr[i]);
+  //  for (int i=0; i<sizeof(int32_t); i++)
+  //    printf("%02x ", ptr[i]);
 
-    for ( int j=0; j<bytes.size(); j++ )
-      printf("%02x ", bytes[j]);
-    std::cout << std::endl;
-  }
+  //  for ( int j=0; j<bytes.size(); j++ )
+  //    printf("%02x ", bytes[j]);
+  //  std::cout << std::endl;
+  //}
 
   return bytes;
 }

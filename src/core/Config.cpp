@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #include "Config.hpp"
 
@@ -34,7 +35,7 @@ bool Config::read()
   // read etc file in /etc/lightpcss.conf
   // or /usr/local/etc/lightpcss.conf
   std::string conf_root = "/etc/lightpcss.conf";
-  std::string conf_local = "/etc/lightpcss.conf";
+  std::string conf_local = "/usr/local/etc/lightpcss.conf";
   std::string current_conf = "";
 
   if ( std::ifstream( conf_root ) )
@@ -42,9 +43,14 @@ bool Config::read()
   else if ( std::ifstream( conf_local ) )
     current_conf = conf_local;
 
+
   if ( ! current_conf.empty() )
   {
-    std::istringstream is_file( current_conf );
+    std::ifstream if_file(current_conf);
+    std::string conf_str((std::istreambuf_iterator<char>(if_file)),
+      std::istreambuf_iterator<char>());
+
+    std::istringstream is_file( conf_str );
     std::string line;
 
     while( std::getline( is_file, line ) )

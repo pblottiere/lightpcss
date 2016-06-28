@@ -8,6 +8,7 @@ set ( CORE_SRC
   Config.cpp
   Logger.cpp
   query/QueryRead.cpp
+  query/QueryHierarchy.cpp
   query/QueryInfo.cpp )
 
 include_directories( ${POSTGRES_INCLUDE_DIR} )

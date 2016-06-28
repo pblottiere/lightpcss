@@ -20,7 +20,7 @@ using namespace std::chrono;
 void Resource::render( const http_request& hreq, http_response** res )
 {
   Logger &log = Logger::instance();
-  log.info("A query is received");
+  log.info("A query has been received");
 
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
   Request req( hreq );

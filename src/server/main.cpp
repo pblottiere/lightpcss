@@ -10,13 +10,17 @@
 #include <httpserver.hpp>
 #include <Resource.hpp>
 #include <Config.hpp>
+#include <Logger.hpp>
 
 using namespace httpserver;
 
 int main()
 {
   // config
+  Logger &logger = Logger::instance();
   Config &cfg = Config::instance();
+
+  logger.info( "Started" );
 
   // create web server
   create_webserver cws = create_webserver( cfg.port );
