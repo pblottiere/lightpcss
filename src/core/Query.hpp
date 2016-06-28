@@ -24,7 +24,6 @@ class Query
   protected:
     virtual bool run( Database *db );
     virtual bool parse_params();
-    void clean_json( std::string &json );
 
     std::string _table;
     std::string _result;

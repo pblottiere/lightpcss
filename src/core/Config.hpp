@@ -18,6 +18,7 @@ class Config
     int32_t port;
     int32_t max_threads;
     std::string resource;
+    std::string allow;
 
   private:
     Config();

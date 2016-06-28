@@ -31,17 +31,3 @@ bool Query::parse_params()
 {
   return false;
 }
-
-void Query::clean_json( std::string &json )
-{
-  std::string::size_type i;
-
-  for ( i = json.find("\\n"); i != std::string::npos; i = json.find("\\n"))
-    json.erase( i, 2 );
-
-  for ( i = json.find("\\"); i != std::string::npos; i = json.find("\\"))
-    json.erase( i, 1 );
-
-  for ( i = json.find("\n"); i != std::string::npos; i = json.find("\n"))
-    json.erase( i, 1 );
-}

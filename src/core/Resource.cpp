@@ -12,6 +12,7 @@
 #include "Request.hpp"
 #include "Database.hpp"
 #include "Logger.hpp"
+#include "Config.hpp"
 
 using namespace httpserver;
 using namespace std::chrono;
@@ -68,5 +69,6 @@ void Resource::render( const http_request& hreq, http_response** res )
   log.info( "Duration millisec: " + std::to_string(duration/1000) );
   log.info( "Duration sec: " + std::to_string(duration/1000/1000) );
 
-  *res = new http_response(http_response_builder(result, code).with_header("Access-Control-Allow-Origin", "http://192.168.1.19:8083").string_response());
+  Config &cfg = Config::instance();
+  *res = new http_response(http_response_builder(result, code).with_header("Access-Control-Allow-Origin", cfg.allow).string_response());
 }

@@ -140,8 +140,9 @@ Json::Value BoundingBox::json_value() const
 {
   Json::Value v;
   v.append( xmin );
-  v.append( xmax );
   v.append( ymin );
+  v.append( zmin );
+  v.append( xmax );
   v.append( ymax );
   v.append( zmax );
 
@@ -202,6 +203,20 @@ std::vector<unsigned char> Point::get_dim_hex( const Dimension &d ) const
 // ----------------------------------------------------------------------------
 // Dimension
 // ----------------------------------------------------------------------------
+Dimension::Dimension()
+  : name( "" )
+  , type( "" )
+  , size( -1 )
+{
+}
+
+Dimension::Dimension( const std::string &name, const std::string type, size_t size )
+  : name( name )
+  , type( type )
+  , size( size )
+{
+}
+
 void Dimension::from_pc_json( const std::string &json, Dimension &dim )
 {
   Json::Value root_dim;
@@ -292,4 +307,56 @@ Json::Value Schema::json_value() const
 bool Schema::is_defined( const std::string &dim ) const
 {
   return dimensions.find( dim ) != dimensions.end() ;
+}
+
+SchemaPotreeGreyhound::SchemaPotreeGreyhound()
+{
+  // {"name":"X","size":8,"type":"floating"},
+  Dimension dx( "X", "floating", 8 );
+  dimensions[dx.name] = dx;
+  dimensions_order.push_back(dx.name);
+
+  //{"name":"Y","size":8,"type":"floating"},
+  Dimension dy( "Y", "floating", 8 );
+  dimensions[dy.name] = dy;
+  dimensions_order.push_back(dy.name);
+
+  //{"name":"Z","size":8,"type":"floating"},
+  Dimension dz( "Z", "floating", 8 );
+  dimensions[dz.name] = dz;
+  dimensions_order.push_back(dz.name);
+
+  //{"name":"Intensity","size":2,"type":"unsigned"},
+  Dimension di ( "Intensity", "unsigned", 2 );
+  dimensions[di.name] = di;
+  dimensions_order.push_back( di.name );
+
+  //{"name":"Origin","size":4,"type":"unsigned"}
+  Dimension dor ( "Origin", "unsigned", 4 );
+  dimensions[dor.name] = dor;
+  dimensions_order.push_back( dor.name );
+
+  //{"name":"Red","size":2,"type":"unsigned"},
+  Dimension dred ( "Red", "unsigned", 2 );
+  dimensions[dred.name] = dred;
+  dimensions_order.push_back( dred.name );
+
+  //{"name":"Green","size":2,"type":"unsigned"},
+  Dimension dg ( "Green", "unsigned", 2 );
+  dimensions[dg.name] = dg;
+  dimensions_order.push_back( dg.name );
+
+  //{"name":"Blue","size":2,"type":"unsigned"},
+  Dimension db ( "Blue", "unsigned", 2 );
+  dimensions[db.name] = db;
+  dimensions_order.push_back( db.name );
+
+  //{"name":"ReturnNumber","size":1,"type":"unsigned"},
+  //{"name":"NumberOfReturns","size":1,"type":"unsigned"},
+  //{"name":"ScanDirectionFlag","size":1,"type":"unsigned"},
+  //{"name":"EdgeOfFlightLine","size":1,"type":"unsigned"},
+  //{"name":"Classification","size":1,"type":"unsigned"},
+  //{"name":"ScanAngleRank","size":4,"type":"floating"},
+  //{"name":"UserData","size":1,"type":"unsigned"},
+  //{"name":"PointSourceId","size":2,"type":"unsigned"},
 }

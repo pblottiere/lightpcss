@@ -13,6 +13,9 @@
 
 std::vector<std::string> split(const std::string &s, char delim);
 
+// ----------------------------------------------------------------------------
+// BoundingBox
+// ----------------------------------------------------------------------------
 class BoundingBox
 {
   public:
@@ -48,9 +51,14 @@ class BoundingBox
     float zmax;
 };
 
+// ----------------------------------------------------------------------------
+// Dimension
+// ----------------------------------------------------------------------------
 class Dimension
 {
   public:
+    Dimension();
+    Dimension( const std::string &name, const std::string type, size_t size );
     Json::Value json_value() const;
 
     /* Returns a dimension object from a json string defined as
@@ -69,6 +77,9 @@ class Dimension
     static std::string potree_type( const std::string &pc_type );
 };
 
+// ----------------------------------------------------------------------------
+// Schema
+// ----------------------------------------------------------------------------
 class Schema
 {
   public:
@@ -81,6 +92,15 @@ class Schema
     std::vector<std::string> dimensions_order;
 };
 
+class SchemaPotreeGreyhound : public Schema
+{
+  public:
+    SchemaPotreeGreyhound();
+};
+
+// ----------------------------------------------------------------------------
+// Point
+// ----------------------------------------------------------------------------
 class Point
 {
   public:

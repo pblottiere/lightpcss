@@ -17,6 +17,7 @@ Config::Config()
   , port( 8080 )
   , max_threads( 5 )
   , resource( "/resource" )
+  , allow( "" )
 {
   read();
 }
@@ -64,6 +65,8 @@ bool Config::read()
             max_threads = atoi( value.c_str() );
           else if ( key == "resource" )
             resource = value;
+          else if ( key == "allow_access_control" )
+            allow = value;
         }
       }
     }
