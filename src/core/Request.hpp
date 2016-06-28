@@ -17,10 +17,13 @@ class Request
     std::string table_name() const;
     std::string query_name() const;
     std::string column_name() const;
+    size_t params( std::map<std::string, std::string,
+        httpserver::http::arg_comparator> &params ) const;
 
   private:
     bool _valid;
     std::string _table;
     std::string _column;
     std::string _query;
+    std::map<std::string, std::string, httpserver::http::arg_comparator> _params;
 };

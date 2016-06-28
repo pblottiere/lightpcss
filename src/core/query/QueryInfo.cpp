@@ -54,12 +54,12 @@ bool QueryInfo::run( Database *db )
 
   if ( npoints > 0 )
   {
-    std::string schema = db->schema();
+    Schema schema = db->schema();
     BoundingBox box;
     bool box_ok = db->bounding_box( box );
     std::string srs = db->srs();
 
-    if ( schema.size() > 0 && box_ok && srs.size() > 0 )
+    if ( box_ok && srs.size() > 0 )
     {
       format_json_result( npoints, schema, box, srs );
       rc = true;
@@ -69,27 +69,21 @@ bool QueryInfo::run( Database *db )
   return rc;
 }
 
-void QueryInfo::format_json_result( int npoints, const std::string &schema,
+void QueryInfo::format_json_result( int npoints, const Schema &schema,
    const BoundingBox &box, const std::string &srs )
 {
   Json::FastWriter writer;
   Json::Value root;
 
-  Json::Value root_bounds;
-  root_bounds.append( box.xmin );
-  root_bounds.append( box.xmax );
-  root_bounds.append( box.ymin );
-  root_bounds.append( box.ymax );
-  root_bounds.append( box.zmax );
-  root["bounds"] = root_bounds;
+  root["bounds"] = box.json_value();
 
   root["numPoints"] = npoints;
-  root["schema"] = schema;
+  root["schema"] = schema.json_value();
 
   root["srs"] = srs;
 
   root["type"] = "octree";
 
   _result = writer.write( root );
-  clean_json( _result );
+  //clean_json( _result );
 }

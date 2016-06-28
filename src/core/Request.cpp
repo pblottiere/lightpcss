@@ -23,6 +23,8 @@ Request::Request( const httpserver::http_request &req )
     _table = req.get_path_piece(1);
     _column = req.get_path_piece(2);
     _query = req.get_path_piece(3);
+    req.get_args( _params );
+
     _valid = true;
   }
 }
@@ -45,4 +47,10 @@ std::string Request::query_name() const
 std::string Request::column_name() const
 {
   return _column;
+}
+
+size_t Request::params( std::map<std::string, std::string,
+      httpserver::http::arg_comparator> &params ) const
+{
+  params = _params;
 }

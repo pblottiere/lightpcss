@@ -27,6 +27,11 @@ bool Query::run( Database *db )
   return false;
 }
 
+bool Query::parse_params()
+{
+  return false;
+}
+
 void Query::clean_json( std::string &json )
 {
   std::string::size_type i;

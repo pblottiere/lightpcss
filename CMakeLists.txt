@@ -20,6 +20,13 @@ find_package ( Postgres REQUIRED )
 find_package ( Jsoncpp REQUIRED )
 
 #------------------------------------------------------------------------------
+# custom commands
+#------------------------------------------------------------------------------
+add_custom_target( uninstall
+  "${CMAKE_COMMAND}" -P "${CMAKE_MODULE_PATH}/uninstall.cmake" )
+
+#------------------------------------------------------------------------------
 # SUBDIRS
 #------------------------------------------------------------------------------
 add_subdirectory ( src )
+add_subdirectory ( etc )

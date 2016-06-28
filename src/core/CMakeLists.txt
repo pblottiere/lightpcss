@@ -4,6 +4,10 @@ set ( CORE_SRC
   Resource.cpp
   Database.cpp
   Request.cpp
+  utils.cpp
+  Config.cpp
+  Logger.cpp
+  query/QueryRead.cpp
   query/QueryInfo.cpp )
 
 include_directories( ${POSTGRES_INCLUDE_DIR} )
@@ -13,3 +17,5 @@ add_library ( lightpcss_core SHARED ${CORE_SRC} )
 
 target_link_libraries ( lightpcss_core ${POSTGRES_LIBRARY} )
 target_link_libraries ( lightpcss_core ${JSONCPP_LIBRARY} )
+
+install ( TARGETS lightpcss_core LIBRARY DESTINATION lib )

@@ -9,25 +9,25 @@
 
 #include <httpserver.hpp>
 #include <Resource.hpp>
+#include <Config.hpp>
 
 using namespace httpserver;
 
 int main()
 {
   // config
-  int32_t port = 8080;
-  int32_t max_threads = 5;
+  Config &cfg = Config::instance();
 
   // create web server
-  create_webserver cws = create_webserver(port);
+  create_webserver cws = create_webserver( cfg.port );
   cws.start_method(http::http_utils::INTERNAL_SELECT);
-  cws.max_threads(max_threads);
+  cws.max_threads( cfg.max_threads );
 
   webserver ws = cws;
 
   // init resource
   Resource pcr;
-  ws.register_resource("/resource", &pcr, true);
+  ws.register_resource( cfg.resource, &pcr, true );
 
   // start server (blocking call)
   ws.start(true);

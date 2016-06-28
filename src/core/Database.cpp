@@ -8,6 +8,7 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
+#include "Logger.hpp"
 #include "Database.hpp"
 
 Database::Database()
@@ -72,15 +73,14 @@ int32_t Database::npoints()
   return npoints;
 }
 
-std::string Database::schema()
+Schema Database::schema()
 {
   std::string sql = "select json_array_elements(PC_Summary("
     + _column + ")::json->'dims') from "
     + _table
     + " where id = 1;";
 
-  Json::FastWriter writer;
-  Json::Value root_schema;
+  Schema schema;
   if ( get_res( sql ) )
   {
     int nfields = PQnfields( _res );
@@ -88,43 +88,21 @@ std::string Database::schema()
     {
       for (int j = 0; j < nfields; j++)
       {
-        std::string dim = PQgetvalue(_res, i, j);
+        std::string dimjson = PQgetvalue(_res, i, j);
 
-        Json::Value root_schema_dim;
-        Json::Value root_dim;
-        Json::Reader reader_dim;
-        if ( reader_dim.parse( dim, root_dim ) )
-        {
-          std::string name = root_dim.get("name", "").asString();
-          int32_t size = root_dim.get("size", "").asInt();
-          std::string type = root_dim.get("type", "").asString();
+        Dimension pc_dim;
+        Dimension::from_pc_json( dimjson, pc_dim );
 
-          root_schema_dim["name"] = name;
-          root_schema_dim["size"] = size;
-          root_schema_dim["type"] = potree_type(type);
-
-          root_schema.append( writer.write( root_schema_dim ) );
-        }
+        Dimension potree_dim = Dimension::to_potree_dimension( pc_dim );
+        schema.dimensions[potree_dim.name] = potree_dim;
+        schema.dimensions_order.push_back( potree_dim.name );
       }
     }
   }
 
   clear_res();
 
-  return writer.write( root_schema );
-}
-
-std::string Database::potree_type( const std::string &pc_type )
-{
-  // TODO : to complete
-  std::string potree_type = "signed";
-
-  if ( pc_type == "double" )
-    potree_type = "floating";
-  else if ( pc_type == "int32_t" )
-    potree_type = "signed";
-
-  return potree_type;
+  return schema;
 }
 
 bool Database::bounding_box( BoundingBox &box )
@@ -141,6 +119,8 @@ bool Database::bounding_box( BoundingBox &box )
   if ( get_res( sql ) )
   {
     int nfields = PQnfields( _res );
+
+    // wait for xmin, xmax, ymin, ymax, zmax
     if ( nfields == 5 )
     {
       std::string xmin = PQgetvalue( _res, 0, 0 );
@@ -149,11 +129,7 @@ bool Database::bounding_box( BoundingBox &box )
       std::string ymax = PQgetvalue( _res, 0, 3 );
       std::string zmax = PQgetvalue( _res, 0, 4 );
 
-      box.xmin = atof( xmin.c_str() );
-      box.xmax = atof( xmax.c_str() );
-      box.ymin = atof( ymin.c_str() );
-      box.ymax = atof( ymax.c_str() );
-      box.zmax = atof( zmax.c_str() );
+      box = BoundingBox( xmin, xmax, ymin, ymax, "0.0", zmax );
 
       rc = true;
     }
@@ -197,8 +173,47 @@ std::string Database::srs()
   return srs_str;
 }
 
+bool Database::get_points( const BoundingBox &box,
+    std::vector<Point> &points )
+{
+  bool rc = false;
+
+  Schema sch = schema();
+  std::string lod = std::to_string(25000);
+  std::string srsid = std::to_string(srs_id());
+
+  std::string poly = box.to_string();
+  std::string sql = "select pc_get(pc_explode("
+    + _column + ")) as pt from "
+    + _table + " where pc_intersects("
+    + _column + ", st_geomfromtext('polygon (("
+    + poly + "))',"
+    + srsid + ")) limit " + lod + ";";
+
+  if ( get_res( sql ) )
+  {
+    int nfields = PQnfields( _res );
+    for ( int i = 0; i < PQntuples(_res); i++)
+    {
+      for (int j = 0; j < nfields; j++)
+      {
+        std::string ptjson = PQgetvalue(_res, i, j);
+        Point pt = Point::from_pc_json( ptjson, sch );
+        pt.schema = sch;
+        points.push_back( pt );
+      }
+    }
+  }
+  clear_res();
+
+  return rc;
+}
+
 bool Database::get_res( const std::string &sql )
 {
+  Logger &log = Logger::instance();
+  log.info( "Run SQL on database: " + sql );
+
   bool rc = false;
 
   clear_res();

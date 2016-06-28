@@ -11,15 +11,7 @@
 #include <libpq-fe.h>
 
 #include "Query.hpp"
-
-struct BoundingBox
-{
-  float xmin;
-  float xmax;
-  float ymin;
-  float ymax;
-  float zmax;
-};
+#include "utils.hpp"
 
 class Database
 {
@@ -33,15 +25,15 @@ class Database
     bool execute( Query &query );
 
     int32_t npoints();
-    std::string schema();
+    Schema schema();
     bool bounding_box( BoundingBox &box );
     int32_t srs_id();
     std::string srs();
+    bool get_points( const BoundingBox &box, std::vector<Point> &points );
 
   private:
     bool get_res( const std::string &sql );
     void clear_res();
-    std::string potree_type( const std::string &pc_type );
 
     std::string _table;
     std::string _column;
