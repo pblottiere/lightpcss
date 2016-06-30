@@ -44,7 +44,7 @@ bool QueryRead::run( Database *db )
   {
     std::vector<Point> points;
 
-    db->get_points( _box, 20000, points );
+    db->get_points( _box, 500000, points );
 
     _result = "";
     int32_t nof_valid_pts = 0;
