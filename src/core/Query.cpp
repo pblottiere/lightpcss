@@ -10,6 +10,7 @@
 
 Query::Query()
   : _result("")
+  , _content_type( "text/plain" )
 {
 }
 
@@ -30,4 +31,9 @@ bool Query::run( Database *db )
 bool Query::parse_params()
 {
   return false;
+}
+
+std::string Query::content_type() const
+{
+  return _content_type;
 }

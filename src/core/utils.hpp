@@ -9,13 +9,42 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iomanip>
+#include <sstream>
 #include <jsoncpp/json/json.h>
 
+// ----------------------------------------------------------------------------
+// types
+// ----------------------------------------------------------------------------
+union UInt8Bytes
+{
+    uint8_t ival;
+    uint8_t bytes[sizeof(uint8_t)];
+};
+
+union UInt16Bytes
+{
+    uint16_t ival;
+    uint8_t bytes[sizeof(uint16_t)];
+};
+
+union Int32Bytes
+{
+    int32_t ival;
+    uint8_t bytes[sizeof(int32_t)];
+};
+
+// ----------------------------------------------------------------------------
+// functions
+// ----------------------------------------------------------------------------
 std::vector<std::string> split(const std::string &s, char delim);
+
+bool export_to_wkt( int32_t epsg_code, std::string &wkt );
 
 // ----------------------------------------------------------------------------
 // BoundingBox
 // ----------------------------------------------------------------------------
+class Schema;
 class BoundingBox
 {
   public:
@@ -34,7 +63,7 @@ class BoundingBox
      * '[xmin, ymin, zmin, xmax, ymax, zmax]'
      * or 'xmin, ymin, zmin, xmax, ymax, zmax'
      */
-    static BoundingBox from_string( const std::string &str );
+    static BoundingBox from_string( const std::string &str, Schema &sch );
 
     std::string xmin_str() const;
     std::string xmax_str() const;
@@ -87,15 +116,32 @@ class Schema
 
     Json::Value json_value() const;
     bool is_defined( const std::string &dim ) const;
+    size_t get_position( const std::string &dim_name ) const;
+
+    size_t get_position_x() const;
+    size_t get_position_y() const;
+    size_t get_position_z() const;
 
     std::map<std::string, Dimension> dimensions;
     std::vector<std::string> dimensions_order;
 };
 
-class SchemaPotreeGreyhound : public Schema
+/* Static schema asked by Potree within the Info query when "Greyhound" loader
+ * is used
+ */
+class SchemaPotreeGreyhoundInfo : public Schema
 {
   public:
-    SchemaPotreeGreyhound();
+    SchemaPotreeGreyhoundInfo();
+};
+
+/* Static schema asked by Potree within the Read query when "Greyhound" loader
+ * is used
+ */
+class SchemaPotreeGreyhoundRead : public Schema
+{
+  public:
+    SchemaPotreeGreyhoundRead();
 };
 
 // ----------------------------------------------------------------------------
@@ -104,13 +150,14 @@ class SchemaPotreeGreyhound : public Schema
 class Point
 {
   public:
-    // {"pcid":1,
-    // "pt":[378281,43.6042,1.44354,194,-0.00755672,-0.00907564,0.00486406,0.00774673,0.017252,0.00039099,1.76517,-0.0102706,-0.0489276,0.00582886,5.19991e-05,-0.00116022,0.00409155]}
-    static Point from_pc_json( const std::string &json, const Schema &sch );
+    Point();
+    static Point from_string( const std::string &ptstr, const Schema &sch );
 
-    std::vector<unsigned char> get_dim_hex( const Dimension &d ) const;
+    bool valid() const;
 
-    int32_t pcid;
     std::vector<std::string> data; // not casted
     Schema schema; // data and schema.dimensions_order are well ordered
+    double x;
+    double y;
+    double z;
 };

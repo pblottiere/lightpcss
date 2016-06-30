@@ -22,7 +22,7 @@ class Config
 
   private:
     Config();
-    Config& operator= (const Config&){};
+    void operator= (const Config&){};
     Config (const Config&){};
 
     bool read();

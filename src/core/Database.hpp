@@ -25,11 +25,12 @@ class Database
     bool execute( Query &query );
 
     int32_t npoints();
+    int32_t npoints( const BoundingBox &box );
     Schema schema();
     bool bounding_box( BoundingBox &box );
     int32_t srs_id();
-    std::string srs();
-    bool get_points( const BoundingBox &box, std::vector<Point> &points );
+    bool get_points( const BoundingBox &box, int32_t npoints,
+        std::vector<Point> &points );
 
   private:
     bool get_res( const std::string &sql );

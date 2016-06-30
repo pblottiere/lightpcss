@@ -12,11 +12,11 @@
 Request::Request( const httpserver::http_request &req )
   : _valid( false )
   , _table( "" )
-  , _query( "" )
   , _column( "" )
+  , _query( "" )
 {
   // protocol: http://<IP>:<PORT>/resource/<TABLE>/<QUERY>
-  int pieces_size = 4;
+  size_t pieces_size = 4;
 
   if ( req.get_path_pieces_size() == pieces_size )
   {
@@ -49,7 +49,7 @@ std::string Request::column_name() const
   return _column;
 }
 
-size_t Request::params( std::map<std::string, std::string,
+void Request::params( std::map<std::string, std::string,
       httpserver::http::arg_comparator> &params ) const
 {
   params = _params;

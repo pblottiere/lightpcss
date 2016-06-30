@@ -19,7 +19,7 @@ class Logger
   private:
     Logger();
     ~Logger();
-    Logger& operator= (const Logger&){};
+    void operator= (const Logger&){};
     Logger (const Logger&){};
 
     static Logger _instance;

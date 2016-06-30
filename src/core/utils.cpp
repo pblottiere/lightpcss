@@ -8,6 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
+#include <iomanip>
+
+#include "ogr_spatialref.h"
 
 #include "utils.hpp"
 
@@ -31,6 +34,22 @@ std::vector<std::string> split(const std::string &s, char delim)
     tokens.push_back(item);
 
   return tokens;
+}
+
+bool export_to_wkt( int32_t epsg_code, std::string &wkt_str )
+{
+  bool rc = false;
+  OGRSpatialReference oSRS;
+  oSRS.importFromEPSG( epsg_code );
+
+  char *wkt = NULL;
+  if ( OGRERR_NONE == oSRS.exportToWkt( &wkt ) )
+  {
+    wkt_str = wkt;
+    rc = true;
+  }
+
+  return rc;
 }
 
 // ----------------------------------------------------------------------------
@@ -85,22 +104,38 @@ bool BoundingBox::is_valid() const
     && (ymax != -1) && (zmin != -1) && (zmax != -1);
 }
 
-BoundingBox BoundingBox::from_string( const std::string &str )
+BoundingBox BoundingBox::from_string( const std::string &str, Schema &sch )
 {
   BoundingBox box;
-
-  // [int, int, int, ...]
-  bool box_ok = false;
   std::vector<std::string> bounds = split( str, ',' );
 
-  if ( bounds.size() == 6 )
+  // size=3 => [xmin, ymin, zmin]
+  if ( bounds.size() == 3 )
   {
-    box.xmin = atof(bounds[0].c_str());
-    box.ymin = atof(bounds[1].c_str());
-    box.zmin = atof(bounds[2].c_str());
-    box.xmax = atof(bounds[3].c_str());
-    box.ymax = atof(bounds[4].c_str());
-    box.zmax = atof(bounds[5].c_str());
+    size_t xpos = sch.get_position_x();
+    size_t ypos = sch.get_position_y();
+    size_t zpos = sch.get_position_z();
+
+    box.xmin = atof(bounds[xpos].c_str());
+    box.ymin = atof(bounds[ypos].c_str());
+    box.zmin = atof(bounds[zpos].c_str());
+    box.xmax = 0;
+    box.ymax = 0;
+    box.zmax = 0;
+  }
+  // size=6 => [xmin, ymin, zmin, xmax, ymax, zmax]
+  else if ( bounds.size() == 6 )
+  {
+    size_t xpos = sch.get_position_x();
+    size_t ypos = sch.get_position_y();
+    size_t zpos = sch.get_position_z();
+
+    box.xmin = atof(bounds[xpos].c_str());
+    box.ymin = atof(bounds[ypos].c_str());
+    box.zmin = atof(bounds[zpos].c_str());
+    box.xmax = atof(bounds[3+xpos].c_str());
+    box.ymax = atof(bounds[3+ypos].c_str());
+    box.zmax = atof(bounds[3+zpos].c_str());
   }
 
   return box;
@@ -152,48 +187,41 @@ Json::Value BoundingBox::json_value() const
 // ----------------------------------------------------------------------------
 // Point
 // ----------------------------------------------------------------------------
-Point Point::from_pc_json( const std::string &json, const Schema &sch )
+Point::Point()
+  : x(0)
+  , y(0)
+  , z(0)
+{
+}
+
+Point Point::from_string( const std::string &ptstr, const Schema &sch )
 {
   Point pt;
-  Json::Value root;
-  Json::Reader reader;
+  int32_t pos;
+  std::vector<std::string> ptvals = split( ptstr, ',' );
 
-  if ( reader.parse( json, root ) )
-  {
-    pt.pcid = root.get("pcid", "").asInt();
+  // get x
+  pos = sch.get_position_x();
+  if ( pos != -1 )
+    pt.x = std::stod( ptvals[pos] );
 
-    Json::Value array = root.get("pt", "");
-    Json::FastWriter fastWriter;
-    std::string data_str = fastWriter.write(array);
-    pt.data = split( data_str, ',' );
-  }
+  pos = sch.get_position_y();
+  if ( pos != -1 )
+    pt.y = std::stod( ptvals[pos].c_str() );
+
+  pos = sch.get_position_z();
+  if ( pos != -1 )
+    pt.z = std::stod( ptvals[pos].c_str() );
 
   return pt;
 }
 
-std::vector<unsigned char> Point::get_dim_hex( const Dimension &d ) const
+bool Point::valid() const
 {
-  std::vector<unsigned char> bytes;
-  //size_t pos = find(schema.dimensions_order.begin(),
-  //    schema.dimensions_order.end(), d.name) - schema.dimensions_order.begin();
-
-  //if ( pos != schema.dimensions_order.size() )
-  //{
-  //  std::string datastr = data[pos];
-
-  //  float f = atof( datastr.c_str() );
-  //  unsigned char *ptr = (unsigned char *)&f;
-
-
-  //  for (int i=0; i<sizeof(int32_t); i++)
-  //    printf("%02x ", ptr[i]);
-
-  //  for ( int j=0; j<bytes.size(); j++ )
-  //    printf("%02x ", bytes[j]);
-  //  std::cout << std::endl;
-  //}
-
-  return bytes;
+  if ( x != 0 && y != 0 && z != 0 )
+    return true;
+  else
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -223,13 +251,6 @@ void Dimension::from_pc_json( const std::string &json, Dimension &dim )
     dim.size = root_dim.get("size", "").asInt();
     dim.type = root_dim.get("type", "").asString();
   }
-}
-
-static Dimension from_potree_json( const std::string &json )
-{
-  Dimension dim;
-
-  return dim;
 }
 
 Dimension Dimension::to_potree_dimension( const Dimension &pc_dim )
@@ -269,7 +290,7 @@ Schema Schema::from_json( const std::string &json )
 
   std::vector<std::string> dims = split( json, '}' );
 
-  for (int j=0; j<dims.size(); j++)
+  for (size_t j=0; j<dims.size(); j++)
   {
     std::string dimstr = dims[j] + '}';
     if ( dimstr[0] == ',' )
@@ -290,8 +311,8 @@ Json::Value Schema::json_value() const
   Json::Value v;
   Json::FastWriter writer;
 
-  std::vector<std::string>::const_iterator it = dimensions_order.begin();
-  for ( it; it != dimensions_order.end(); ++it )
+  std::vector<std::string>::const_iterator it;
+  for ( it = dimensions_order.begin(); it != dimensions_order.end(); ++it )
   {
     Dimension dim = dimensions.at(*it);
     v.append( dim.json_value() );
@@ -305,7 +326,47 @@ bool Schema::is_defined( const std::string &dim ) const
   return dimensions.find( dim ) != dimensions.end() ;
 }
 
-SchemaPotreeGreyhound::SchemaPotreeGreyhound()
+size_t Schema::get_position( const std::string &dim_name ) const
+{
+  size_t pos = -1;
+
+  if ( is_defined( dim_name ) )
+  {
+    pos = find(dimensions_order.begin(), dimensions_order.end(),
+        dim_name) - dimensions_order.begin();
+  }
+
+  return pos;
+}
+
+size_t Schema::get_position_x() const
+{
+  int32_t pos = get_position( "x" );
+  if ( pos == -1 )
+    pos = get_position( "X" );
+
+  return pos;
+}
+
+size_t Schema::get_position_y() const
+{
+  int32_t pos = get_position( "y" );
+  if ( pos == -1 )
+    pos = get_position( "Y" );
+
+  return pos;
+}
+
+size_t Schema::get_position_z() const
+{
+  int32_t pos = get_position( "z" );
+  if ( pos == -1 )
+    pos = get_position( "Z" );
+
+  return pos;
+}
+
+SchemaPotreeGreyhoundInfo::SchemaPotreeGreyhoundInfo()
 {
   // {"name":"X","size":8,"type":"floating"},
   Dimension dx( "X", "floating", 8 );
@@ -328,7 +389,7 @@ SchemaPotreeGreyhound::SchemaPotreeGreyhound()
   dimensions_order.push_back( di.name );
 
   //{"name":"Origin","size":4,"type":"unsigned"}
-  Dimension dor ( "Origin", "unsigned", 4 );
+  Dimension dor ( "Classification", "unsigned", 1 );
   dimensions[dor.name] = dor;
   dimensions_order.push_back( dor.name );
 
@@ -346,13 +407,51 @@ SchemaPotreeGreyhound::SchemaPotreeGreyhound()
   Dimension db ( "Blue", "unsigned", 2 );
   dimensions[db.name] = db;
   dimensions_order.push_back( db.name );
+}
 
-  //{"name":"ReturnNumber","size":1,"type":"unsigned"},
-  //{"name":"NumberOfReturns","size":1,"type":"unsigned"},
-  //{"name":"ScanDirectionFlag","size":1,"type":"unsigned"},
-  //{"name":"EdgeOfFlightLine","size":1,"type":"unsigned"},
-  //{"name":"Classification","size":1,"type":"unsigned"},
-  //{"name":"ScanAngleRank","size":4,"type":"floating"},
-  //{"name":"UserData","size":1,"type":"unsigned"},
-  //{"name":"PointSourceId","size":2,"type":"unsigned"},
+SchemaPotreeGreyhoundRead::SchemaPotreeGreyhoundRead()
+{
+  // NOTE: dimension are now 'signed' with a size of '4' instead of 'floating'
+  // with a size of '8' in the Info query for X/Y/Z. In fact, we have to return
+  // scaled integer to Potree : scaled_int = ( val_float - offset ) / scale
+
+  //{name:X,size:4,type:signed}
+  Dimension dx ( "X", "signed", 4 );
+  dimensions[ dx.name ] = dx;
+  dimensions_order.push_back( dx.name );
+
+  //{name:Y,size:4,type:signed}
+  Dimension dy( "Y", "signed", 4 );
+  dimensions[dy.name] = dy;
+  dimensions_order.push_back(dy.name);
+
+  //{name:Z,size:4,type:signed}
+  Dimension dz( "Z", "signed", 4 );
+  dimensions[dz.name] = dz;
+  dimensions_order.push_back(dz.name);
+
+  //{name:Intensity,size:2,type:unsigned}
+  Dimension di ( "Intensity", "unsigned", 2 );
+  dimensions[di.name] = di;
+  dimensions_order.push_back( di.name );
+
+  // classification
+  Dimension dc ( "Classification", "unsigned", 1 );
+  dimensions[dc.name] = dc;
+  dimensions_order.push_back( dc.name );
+
+  //{"name":"Red","size":2,"type":"unsigned"},
+  Dimension dred ( "Red", "unsigned", 2 );
+  dimensions[dred.name] = dred;
+  dimensions_order.push_back( dred.name );
+
+  //{"name":"Green","size":2,"type":"unsigned"},
+  Dimension dg ( "Green", "unsigned", 2 );
+  dimensions[dg.name] = dg;
+  dimensions_order.push_back( dg.name );
+
+  //{"name":"Blue","size":2,"type":"unsigned"},
+  Dimension db ( "Blue", "unsigned", 2 );
+  dimensions[db.name] = db;
+  dimensions_order.push_back( db.name );
 }

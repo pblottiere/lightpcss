@@ -73,6 +73,29 @@ int32_t Database::npoints()
   return npoints;
 }
 
+int32_t Database::npoints( const BoundingBox &box )
+{
+  int32_t npoints = -1;
+  std::string poly = box.to_string();
+  std::string srsid = std::to_string(srs_id());
+  std::string sql = "select sum(pc_numpoints("
+    + _column + ")) as pt from "
+    + _table + " where pc_intersects("
+    + _column + ", st_geomfromtext('polygon (("
+    + poly + "))',"
+    + srsid + "));";
+
+  if ( get_res( sql ) )
+  {
+    char *nstr = PQgetvalue( _res, 0, 0 ) ;
+    npoints = atoi( nstr );
+  }
+
+  clear_res();
+
+  return npoints;
+}
+
 Schema Database::schema()
 {
   std::string sql = "select json_array_elements(PC_Summary("
@@ -113,6 +136,7 @@ bool Database::bounding_box( BoundingBox &box )
     + ", max( pc_patchmax(" + _column + ", 'y') ) as ymax"
     + ", min( pc_patchmin(" + _column + ", 'x') ) as xmin"
     + ", max( pc_patchmax(" + _column + ", 'x') ) as xmax"
+    + ", min( pc_patchmin(" + _column + ", 'z') ) as zmin"
     + ", max( pc_patchmax(" + _column + ", 'z') ) as zmax"
     + " from " + _table + ";";
 
@@ -120,16 +144,17 @@ bool Database::bounding_box( BoundingBox &box )
   {
     int nfields = PQnfields( _res );
 
-    // wait for xmin, xmax, ymin, ymax, zmax
-    if ( nfields == 5 )
+    // all fields are available
+    if ( nfields == 6 )
     {
-      std::string xmin = PQgetvalue( _res, 0, 0 );
-      std::string xmax = PQgetvalue( _res, 0, 1 );
-      std::string ymin = PQgetvalue( _res, 0, 2 );
-      std::string ymax = PQgetvalue( _res, 0, 3 );
-      std::string zmax = PQgetvalue( _res, 0, 4 );
+      std::string xmin = PQgetvalue( _res, 0, 2 );
+      std::string xmax = PQgetvalue( _res, 0, 3 );
+      std::string ymin = PQgetvalue( _res, 0, 0 );
+      std::string ymax = PQgetvalue( _res, 0, 1 );
+      std::string zmin = PQgetvalue( _res, 0, 4 );
+      std::string zmax = PQgetvalue( _res, 0, 5 );
 
-      box = BoundingBox( xmin, xmax, ymin, ymax, "0.0", zmax );
+      box = BoundingBox( xmin, xmax, ymin, ymax, zmin, zmax );
 
       rc = true;
     }
@@ -157,29 +182,13 @@ int32_t Database::srs_id()
   return id;
 }
 
-std::string Database::srs()
-{
-  std::string srs_str;
-  std::string sql = "select srtext from spatial_ref_sys where srid = "
-    + std::to_string( srs_id() ) + ";";
-
-  if ( get_res( sql ) )
-  {
-    char *srs = PQgetvalue( _res, 0, 0 ) ;
-    srs_str = srs;
-  }
-  clear_res();
-
-  return srs_str;
-}
-
-bool Database::get_points( const BoundingBox &box,
+bool Database::get_points( const BoundingBox &box, int32_t npoints,
     std::vector<Point> &points )
 {
   bool rc = false;
 
-  Schema sch = schema();
-  std::string lod = std::to_string(25000);
+  Schema pc_sch = schema();
+  std::string lod = std::to_string(npoints);
   std::string srsid = std::to_string(srs_id());
 
   std::string poly = box.to_string();
@@ -197,9 +206,8 @@ bool Database::get_points( const BoundingBox &box,
     {
       for (int j = 0; j < nfields; j++)
       {
-        std::string ptjson = PQgetvalue(_res, i, j);
-        Point pt = Point::from_pc_json( ptjson, sch );
-        pt.schema = sch;
+        std::string ptstr = PQgetvalue(_res, i, j);
+        Point pt = Point::from_string( ptstr, pc_sch );
         points.push_back( pt );
       }
     }

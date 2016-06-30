@@ -25,6 +25,7 @@ void Resource::render( const http_request& hreq, http_response** res )
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
   Request req( hreq );
   std::string result( "" );
+  std::string content_type = "";
   int code( 200 );
 
   if ( req.is_valid() )
@@ -32,18 +33,20 @@ void Resource::render( const http_request& hreq, http_response** res )
     std::unique_ptr<Query> query = QueryFactory::make( req );
 
     Database db;
-    if ( db.connect( "lids_toulouse_compressed_dimensional" ) )
+    //if ( db.connect( "lids_toulouse_compressed_dimensional" ) )
+    //if ( db.connect( "dbautzen" ) )
+    if ( db.connect( "terrain" ) )
     {
       if ( db.execute( *query ) )
       {
         result = query->result();
+        content_type = query->content_type();
         log.info( "Query correctly processed" );
       }
       else
       {
         result = "Query executed on database has failed";
         code = 500;
-        log.err( result );
       }
       db.disconnect();
     }
@@ -70,5 +73,5 @@ void Resource::render( const http_request& hreq, http_response** res )
   log.info( "Duration sec: " + std::to_string(duration/1000/1000) );
 
   Config &cfg = Config::instance();
-  *res = new http_response(http_response_builder(result, code).with_header("Access-Control-Allow-Origin", cfg.allow).string_response());
+  *res = new http_response(http_response_builder(result, code, content_type).with_header("Access-Control-Allow-Origin", cfg.allow).string_response());
 }

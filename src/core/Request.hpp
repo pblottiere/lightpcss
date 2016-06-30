@@ -17,7 +17,7 @@ class Request
     std::string table_name() const;
     std::string query_name() const;
     std::string column_name() const;
-    size_t params( std::map<std::string, std::string,
+    void params( std::map<std::string, std::string,
         httpserver::http::arg_comparator> &params ) const;
 
   private:

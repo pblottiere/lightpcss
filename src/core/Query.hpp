@@ -20,6 +20,7 @@ class Query
     ~Query();
 
     std::string result();
+    std::string content_type() const;
 
   protected:
     virtual bool run( Database *db );
@@ -29,6 +30,7 @@ class Query
     std::string _result;
     std::string _column;
     std::map<std::string, std::string, httpserver::http::arg_comparator> _params;
+    std::string _content_type;
 
     friend Database;
     friend class QueryFactory;

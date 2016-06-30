@@ -10,20 +10,25 @@
 #include <jsoncpp/json/json.h>
 
 #include "QueryRead.hpp"
+#include "../Compressor.hpp"
 #include "../Logger.hpp"
 
-/* GET Request
-GET /resource/terrain/read?depthBegin=10&depthEnd=11&bounds=[728630,4676917,309,728820,4677107,499]&schema=[{name:X,size:4,type:signed},{name:Y,size:4,type:signed},{name:Z,size:4,type:signed},{name:Intensity,size:2,type:unsigned},{name:Classification,size:1,type:unsigned},{name:Red,size:2,type:unsigned},{name:Green,size:2,type:unsigned},{name:Blue,size:2,type:unsigned}]&scale=0.01&offset=[728630,4676727,309]&compress=true
- */
-
-/* Result waited
- */
+const std::string PARAM_KEY_LOD_BEGIN = "depthBegin";
+const std::string PARAM_KEY_LOD_END = "depthEnd";
+const std::string PARAM_KEY_BOUNDS = "bounds";
+const std::string PARAM_KEY_SCALE = "scale";
+const std::string PARAM_KEY_OFFSET = "offset";
+const std::string PARAM_KEY_COMPRESS = "compress";
 
 QueryRead::QueryRead()
   : Query()
+  , _schema ( SchemaPotreeGreyhoundRead() )
   , _lod_begin( 0 )
   , _lod_end( 0 )
+  ,  _scale( 1.0 )
+  , _compress( true )
 {
+  _content_type = "application/octet-stream";
 }
 
 QueryRead::~QueryRead()
@@ -38,68 +43,150 @@ bool QueryRead::run( Database *db )
   if ( parse_params() )
   {
     std::vector<Point> points;
-    db->get_points( _box, points );
-    log.info( "NP: " + std::to_string(points.size()) );
 
-    std::vector<unsigned char> bytes;
-    for ( size_t j=0; j<points.size(); j++ )
+    db->get_points( _box, 20000, points );
+
+    _result = "";
+    int32_t nof_valid_pts = 0;
+    for ( size_t i=0; i<points.size(); i++ )
     {
-      Point pt = points[j];
+      Point pt = points[i];
 
-      for ( size_t i=0; i<_schema.dimensions_order.size(); i++ )
+      if ( pt.valid() )
       {
-        std::vector<unsigned char> ptbytes;
-        std::string dimname = _schema.dimensions_order[i];
-        Dimension d = _schema.dimensions[dimname];
-        ptbytes = pt.get_dim_hex( d );
+        nof_valid_pts++;
+
+        int32_t xval = ( pt.x - _offset.xmin ) / _scale;
+        int32_t yval = ( pt.y - _offset.ymin ) / _scale;
+        int32_t zval = ( pt.z - _offset.zmin ) / _scale;
+        uint16_t ival = 0;
+        uint8_t cval = 0;
+        uint16_t rval = 0;
+        uint16_t gval = 0;
+        uint16_t bval = 0;
+
+        add_dim_to_result( xval );
+        add_dim_to_result( yval );
+        add_dim_to_result( zval );
+        add_dim_to_result( ival );
+        add_dim_to_result( cval );
+        add_dim_to_result( rval );
+        add_dim_to_result( gval );
+        add_dim_to_result( bval );
       }
     }
+
+    // laz compression
+    if ( _compress )
+    {
+      SchemaPotreeGreyhoundRead read;
+      CompressorLAZ laz( read );
+      std::vector<unsigned char> compressed;
+
+      std::vector<unsigned char> v(_result.begin(), _result.end());
+      laz.compress( v, compressed );
+
+      _result = "";
+      for ( size_t i=0; i<compressed.size(); i++ )
+        _result.push_back( compressed[i] );
+    }
+
+    // footer
+    if ( nof_valid_pts == 0 )
+      _result = {0x00, 0x00, 0x00, 0x00};
+    else
+      add_dim_to_result( nof_valid_pts );
+
+    log.info( "NP: " + std::to_string(nof_valid_pts) );
   }
+
+  rc = true;
 
   return rc;
 }
 
+void QueryRead::add_dim_to_result( int32_t val )
+{
+  Int32Bytes bytes;
+  bytes.ival = val;
+
+  _result.push_back( bytes.bytes[0] );
+  _result.push_back( bytes.bytes[1] );
+  _result.push_back( bytes.bytes[2] );
+  _result.push_back( bytes.bytes[3] );
+}
+
+void QueryRead::add_dim_to_result( uint16_t val )
+{
+  UInt16Bytes bytes;
+  bytes.ival = val;
+
+  _result.push_back( bytes.bytes[0] );
+  _result.push_back( bytes.bytes[1] );
+}
+
+void QueryRead::add_dim_to_result( uint8_t val )
+{
+  UInt16Bytes bytes;
+  bytes.ival = val;
+
+  _result.push_back( bytes.bytes[0] );
+}
+
 bool QueryRead::parse_params()
 {
-  Logger &logger = Logger::instance();
-  bool lod_begin_ok = false;
-  bool lod_end_ok = false;
-  bool box_ok = false;
-  bool schema_ok = false;
+  std::string key = "";
 
-  std::string lod_begin_key = "depthBegin";
-  if ( _params.find(lod_begin_key) != _params.end() )
+  key = PARAM_KEY_LOD_BEGIN;
+  if ( _params.find(key) != _params.end() )
+    _lod_begin = std::stoi(_params[key]);
+  else
+    goto err;
+
+  key = PARAM_KEY_LOD_END;
+  if ( _params.find(key) != _params.end() )
+    _lod_end = std::stoi(_params[key]);
+  else
+    goto err;
+
+  key = PARAM_KEY_BOUNDS;
+  if ( _params.find(key) != _params.end() )
   {
-    _lod_begin = std::stoi(_params[lod_begin_key]);
-    lod_begin_ok = true;
+    SchemaPotreeGreyhoundRead sch;
+    _box = BoundingBox::from_string( _params[key], sch );
   }
   else
-    logger.err( "Invalid 'depthBegin' parameter" );
+    goto err;
 
-  std::string lod_end_key = "depthEnd";
-  if ( _params.find(lod_end_key) != _params.end() )
+  key = PARAM_KEY_SCALE;
+  if ( _params.find(key) != _params.end() )
+    _scale = atof( _params[key].c_str() );
+  else
+    goto err;
+
+  key = PARAM_KEY_OFFSET;
+  if ( _params.find(key) != _params.end() )
   {
-    _lod_end = std::stoi(_params[lod_end_key]);
-    lod_end_ok = true;
+    SchemaPotreeGreyhoundRead sch;
+    _offset = BoundingBox::from_string( _params[key], sch );
   }
   else
-    logger.err( "Invalid 'depthEnd' parameter" );
+    goto err;
 
-  std::string bounds_key = "bounds";
-  if ( _params.find(bounds_key) != _params.end() )
+  key = PARAM_KEY_COMPRESS;
+  if ( _params.find(key) != _params.end() )
   {
-    _box = BoundingBox::from_string( _params[bounds_key] );
-    box_ok = _box.is_valid();
+    if ( _params[key] == "true" )
+      _compress = true;
+    else
+      _compress = false;
   }
   else
-    logger.err( "Invalid 'bounds' parameter" );
+    goto err;
 
-  std::string schema_key = "schema";
-  if ( _params.find( schema_key ) != _params.end() )
-  {
-    _schema = Schema::from_json( _params[schema_key] );
-    schema_ok = true;
-  }
+  return true;
 
-  return lod_end_ok && lod_begin_ok && box_ok && schema_ok;
+err:
+  Logger::instance().err( "Invalid parameter '" + key + "'" );
+  return false;
 }
