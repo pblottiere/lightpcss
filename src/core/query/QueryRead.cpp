@@ -44,7 +44,16 @@ bool QueryRead::run( Database *db )
   {
     std::vector<Point> points;
 
-    db->get_points( _box, 500000, points );
+    GET_METHOD method = GET_METHOD::FIRST;
+    db->get_points( _box, 1000, method, points );
+
+    //GET_METHOD method = GET_METHOD::SECOND;
+    //db->get_points( _box, 100, method, points );
+
+    //GET_METHOD method = GET_METHOD::THIRD;
+    //db->get_points( _box, 25, method, points );
+
+    log.info( "NP total: " + std::to_string(points.size()) );
 
     _result = "";
     int32_t nof_valid_pts = 0;
@@ -97,7 +106,7 @@ bool QueryRead::run( Database *db )
     else
       add_dim_to_result( nof_valid_pts );
 
-    log.info( "NP: " + std::to_string(nof_valid_pts) );
+    log.info( "NP valid: " + std::to_string(nof_valid_pts) );
   }
 
   rc = true;

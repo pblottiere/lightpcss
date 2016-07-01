@@ -183,21 +183,73 @@ int32_t Database::srs_id()
 }
 
 bool Database::get_points( const BoundingBox &box, int32_t npoints,
-    std::vector<Point> &points )
+    GET_METHOD method, std::vector<Point> &points )
 {
   bool rc = false;
 
   Schema pc_sch = schema();
   std::string lod = std::to_string(npoints);
   std::string srsid = std::to_string(srs_id());
-
   std::string poly = box.to_string();
-  std::string sql = "select pc_get(pc_explode("
-    + _column + ")) as pt from "
+
+  std::string sql;
+  if ( method == GET_METHOD::FIRST)
+  {
+    sql = "select pc_get(pc_explode("
+      + _column + ")) as pt from "
+      + _table + " where pc_intersects("
+      + _column + ", st_geomfromtext('polygon (("
+      + poly + "))',"
+      + srsid + ")) limit " + lod + ";";
+
+    if ( get_res( sql ) )
+    {
+      int nfields = PQnfields( _res );
+      for ( int i = 0; i < PQntuples(_res); i++)
+      {
+        for (int j = 0; j < nfields; j++)
+        {
+          std::string ptstr = PQgetvalue(_res, i, j);
+          Point pt = Point::from_string( ptstr, pc_sch );
+          points.push_back( pt );
+        }
+      }
+    }
+    clear_res();
+  }
+  else if ( method == GET_METHOD::SECOND )
+  {
+    for ( int32_t j = 0; j< npoints; j++ )
+      get_pointn( box, j+1, points );
+  }
+  else if ( method == GET_METHOD::THIRD )
+  {
+    size_t patch_size = 400; // TODO: autodetect
+    for ( int32_t j = 0; j< npoints; j++ )
+    {
+      int32_t r = rand() % patch_size;
+      get_pointn( box, r, points );
+    }
+  }
+
+  return rc;
+}
+
+bool Database::get_pointn( const BoundingBox &box, int32_t n, std::vector<Point> &pts )
+{
+  bool rc = false;
+
+  Schema pc_sch = schema();
+  std::string n_str = std::to_string( n );
+  std::string srsid = std::to_string(srs_id());
+  std::string poly = box.to_string();
+
+  std::string sql = "select pc_get(pc_pointn("
+    + _column + ", " + n_str + ")) as pt from "
     + _table + " where pc_intersects("
     + _column + ", st_geomfromtext('polygon (("
     + poly + "))',"
-    + srsid + ")) limit " + lod + ";";
+    + srsid + "));";
 
   if ( get_res( sql ) )
   {
@@ -207,8 +259,11 @@ bool Database::get_points( const BoundingBox &box, int32_t npoints,
       for (int j = 0; j < nfields; j++)
       {
         std::string ptstr = PQgetvalue(_res, i, j);
-        Point pt = Point::from_string( ptstr, pc_sch );
-        points.push_back( pt );
+        if ( !ptstr.empty() )
+        {
+          Point pt = Point::from_string( ptstr, pc_sch );
+          pts.push_back( pt );
+        }
       }
     }
   }

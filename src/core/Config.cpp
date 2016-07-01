@@ -8,13 +8,13 @@
 #include <sstream>
 #include <iostream>
 
+#include "utils.hpp"
 #include "Config.hpp"
 
 Config Config::_instance=Config();
 
 Config::Config()
   : valid( false )
-  , logfile("")
   , port( 8080 )
   , max_threads( 5 )
   , resource( "/resource" )
@@ -63,9 +63,7 @@ bool Config::read()
 
         if( std::getline( is_line, value ) )
         {
-          if ( key == "logfile" )
-            logfile = value;
-          else if ( key == "port" )
+          if ( key == "port" )
             port = atoi( value.c_str() );
           else if ( key == "max_threads" )
             max_threads = atoi( value.c_str() );

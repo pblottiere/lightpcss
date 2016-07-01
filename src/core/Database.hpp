@@ -13,6 +13,13 @@
 #include "Query.hpp"
 #include "utils.hpp"
 
+enum GET_METHOD
+{
+  FIRST, // limit result to N points after an explode
+  SECOND, // select first Nth points in each patch intersecting with box
+  THIRD // get all point then select randomly => should be done in pgpointcloud
+};
+
 class Database
 {
   public:
@@ -30,7 +37,8 @@ class Database
     bool bounding_box( BoundingBox &box );
     int32_t srs_id();
     bool get_points( const BoundingBox &box, int32_t npoints,
-        std::vector<Point> &points );
+        GET_METHOD meth, std::vector<Point> &points );
+    bool get_pointn( const BoundingBox &box, int32_t n, std::vector<Point> &pts );
 
   private:
     bool get_res( const std::string &sql );

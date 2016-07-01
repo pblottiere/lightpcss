@@ -64,8 +64,6 @@ void Resource::render( const http_request& hreq, http_response** res )
     log.err( result );
   }
 
-  log.info( result );
-
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>( t2 - t1 ).count();
   log.info( "Duration microsec: " + std::to_string(duration) );

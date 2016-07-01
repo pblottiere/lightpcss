@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 class Config
 {
@@ -14,7 +15,6 @@ class Config
     static Config& instance();
 
     bool valid;
-    std::string logfile;
     int32_t port;
     int32_t max_threads;
     std::string resource;
