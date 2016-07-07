@@ -3,19 +3,12 @@ Light Pointcloud Streaming Server
 
 ## Requirements
 
-* libpq
-* libmicrohttpd >= 0.9.37
-* libhttpserver
-* libjsoncpp
+* Flask
 
-## Compilation
+## Usage
 
-```c++
-  git clone https://github.com/pblottiere/lightpcss
-  cd lightpcss
-  mkdir build
-  cd build
-  cmake ..
-  make
-  sudo make install
+Configuration : /var/lib/lighptcss/lightpcss.cfg
+
+```
+  LIGHTPCSS_CFG=lightpcss.cfg python lightpcss.py
 ```

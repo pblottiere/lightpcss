@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+
+*.pyc
+
+conf/lightpcss.uwsgi.yml
+conf/lightpcss.yml
+venv
