@@ -6,8 +6,8 @@ api = Api(
         description='API for accessing LightPCSS',
         )
 
-@api.route("/project")
+@api.route("/lightpcss")
 class Test(Resource):
 
     def get(self):
-        return "COUCOU"
+        return "Light Pointcloud Streaming Server / Oslandia / contact@oslandia.com"

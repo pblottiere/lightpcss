@@ -7,11 +7,18 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 requirements = (
     'flask==0.10.1',
+    'flask-restplus==0.9.2',
     'psycopg2==2.6.1',
+    'pyyaml'
 )
 
 dev_requirements = (
+    'pytest',
+    'pytest-flask',
+    'tox',
     'flake8',
+    'invoke',
+    'pytest-cov',
 )
 
 doc_requirements = (

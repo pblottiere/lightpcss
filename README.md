@@ -3,12 +3,23 @@ Light Pointcloud Streaming Server
 
 ## Requirements
 
-* Flask
+* flask
+* flask-restplus
+* psycopg2
+* pyyaml
+* pytest
+* pytest-flask
 
 ## Usage
 
-Configuration : /var/lib/lighptcss/lightpcss.cfg
+### Run
 
 ```
-  LIGHTPCSS_CFG=lightpcss.cfg python lightpcss.py
+LIGHTPCSS_CFG=lightpcss.cfg python3 lightpcss.py
+```
+
+### Unit tests
+
+```
+python3 -m pytest
 ```
