@@ -9,6 +9,7 @@ from flask import Flask
 from yaml import load as yload
 
 from lightpcss.app import api
+from lightpcss.database import Session
 
 # lightpcss version
 __version__ = '0.1.dev0'
@@ -112,5 +113,6 @@ def create_app(env='Defaults'):
 
     # load extensions
     api.init_app(app)
+    Session.init_app(app)
 
     return app
