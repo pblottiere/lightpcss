@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from itertools import chain
-
 from psycopg2 import connect
 from psycopg2.extras import NamedTupleCursor
-
 from osgeo.osr import SpatialReference
+
+from .pgpointcloud import PgPointCloud
 
 class Session():
     """
@@ -50,6 +50,17 @@ class Session():
             "select pc_summary({0})::json->'dims' as srsid from {1} where id = 1"
             .format(cls.column, cls.table))[0]
         return schema
+
+    @classmethod
+    def get_points(cls, box, dims, offset, scale, lod):
+        return PgPointCloud(cls).get_points(box, dims, offset, scale, lod)
+
+    @classmethod
+    def get_pointn(cls, n, box, dims, offset, scale):
+        """
+        Return the nth point for each PC_PATCH intersecting with the box
+        """
+        return PgPointCloud(cls).get_pointn(box, dims, offset, scale)
 
     @classmethod
     def query(cls, query, parameters=None):
