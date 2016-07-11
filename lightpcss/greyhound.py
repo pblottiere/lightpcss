@@ -67,10 +67,13 @@ class GreyhoundRead(object):
         box = list_from_str(args['bounds'])
 
         if len(box) == 6:
-            Session.get_points(box, GreyhoundReadSchema().dims, offset,
+            read = Session.get_points(box, GreyhoundReadSchema().dims, offset,
                     args['scale'], args['depthEnd'])
 
-        return read
+        resp = Response(read)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Content-Type'] = 'application/octet-stream'
+        return resp
 
 class GreyhoundHierarchy(object):
 

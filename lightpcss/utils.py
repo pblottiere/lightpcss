@@ -82,8 +82,8 @@ class Point(object):
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
-        self.intensity = 0.0
-        self.classification = 0.0
-        self.red = 0.0
-        self.green = 0.0
-        self.blue = 0.0
+        self.intensity = 0
+        self.classification = 0
+        self.red = 0
+        self.green = 0
+        self.blue = 0

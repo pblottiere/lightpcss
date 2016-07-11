@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from struct import pack
+import array
 import codecs
+import binascii
 
 from . import utils
 
@@ -45,29 +47,34 @@ class PgPointCloud(object):
             scaled_points.append( scaled_point )
 
         # build a buffer with hexadecimal data
-        hexbuffer = []
+        hexbuffer = bytearray()
         for pt in scaled_points:
-            hexbuffer.append(self.__hexa_signed_int32(pt.x))
-            hexbuffer.append(self.__hexa_signed_int32(pt.y))
-            hexbuffer.append(self.__hexa_signed_int32(pt.z))
-            hexbuffer.append(self.__hexa_signed_uint16(pt.intensity))
-            hexbuffer.append(self.__hexa_signed_uint8(pt.classification))
-            hexbuffer.append(self.__hexa_signed_uint16(pt.red))
-            hexbuffer.append(self.__hexa_signed_uint16(pt.green))
-            hexbuffer.append(self.__hexa_signed_uint16(pt.blue))
+            hexbuffer.extend(self.__hexa_signed_int32(pt.z))
+            hexbuffer.extend(self.__hexa_signed_int32(pt.x))
+            hexbuffer.extend(self.__hexa_signed_int32(pt.y))
+            hexbuffer.extend(self.__hexa_signed_int32(pt.z))
+            hexbuffer.extend(self.__hexa_signed_uint16(pt.intensity))
+            hexbuffer.extend(self.__hexa_signed_uint8(pt.classification))
+            hexbuffer.extend(self.__hexa_signed_uint16(pt.red))
+            hexbuffer.extend(self.__hexa_signed_uint16(pt.green))
+            hexbuffer.extend(self.__hexa_signed_uint16(pt.blue))
 
+        return hexbuffer
 
     def __get_points_method1(self, box, dims, offsets, scale, lod):
-        points = self.get_pointn(1, box, dims, offsets, scale)
+        return self.get_pointn(1, box, dims, offsets, scale)
 
     def __hexa_signed_int32(self, val):
         hex = pack('i', val)
-        return codecs.encode(hex, 'hex').decode()
+        c = codecs.encode(hex, 'hex').decode()
+        return binascii.unhexlify(c)
 
     def __hexa_signed_uint16(self, val):
         hex = pack('H', val)
-        return codecs.encode(hex, 'hex').decode()
+        c = codecs.encode(hex, 'hex').decode()
+        return binascii.unhexlify(c)
 
     def __hexa_signed_uint8(self, val):
-        hex = pack('c', val)
-        return codecs.encode(hex, 'hex').decode()
+        hex = pack('B', val)
+        c = codecs.encode(hex, 'hex').decode()
+        return binascii.unhexlify(c)
