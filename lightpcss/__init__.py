@@ -108,6 +108,7 @@ def create_app(env='Defaults'):
             logger.warning('no config file found !!')
             sys.exit(1)
     app.config.update(load_yaml_config(str(cfgfile)))
+    print(str(cfgfile))
     set_level(app.config['LOG_LEVEL'])
     logger.debug('loading config from {}'.format(cfgfile))
 

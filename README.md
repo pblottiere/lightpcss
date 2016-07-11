@@ -9,13 +9,14 @@ Light Pointcloud Streaming Server
 * pyyaml
 * pytest
 * pytest-flask
+* pygdal
 
 ## Usage
 
 ### Run
 
 ```
-LIGHTPCSS_CFG=lightpcss.cfg python3 lightpcss.py
+uwsgi --yml conf/lightpcss.uwsgi.yml
 ```
 
 ### Unit tests
