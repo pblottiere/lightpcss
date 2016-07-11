@@ -39,9 +39,9 @@ class Schema(object):
         self.dims = []
 
     def json(self):
-        json = ""
+        json = []
         for dim in self.dims:
-            json += dim.json()
+            json.append(dim.json())
 
         return json
 

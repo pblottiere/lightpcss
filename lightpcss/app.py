@@ -26,7 +26,7 @@ greyhound_ns = api.namespace('greyhound/',
         description='Greyhound Potree Loader')
 
 # info
-@greyhound_ns.route("/info/")
+@greyhound_ns.route("/info")
 class Info(Resource):
 
     def get(self):

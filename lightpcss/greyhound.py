@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from flask import Response
 
 from .database import Session
 from .utils import Dimension, Schema, decimal_default, list_from_str
@@ -51,7 +52,10 @@ class GreyhoundInfo(object):
             "srs" : srs,
             "type" : "octree"}, default = decimal_default )
 
-        return info
+        resp = Response(info)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Content-Type'] = 'text/plain'
+        return resp
 
 class GreyhoundRead(object):
 
