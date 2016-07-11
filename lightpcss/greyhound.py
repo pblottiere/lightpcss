@@ -71,3 +71,30 @@ class GreyhoundRead(object):
                     args['scale'], args['depthEnd'])
 
         return read
+
+class GreyhoundHierarchy(object):
+
+    def run(self):
+        resp = Response(json.dumps(self.fake_hierarchy(0, 6)))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Content-Type'] = 'text/plain'
+        return resp
+
+    def fake_hierarchy(self, begin, end):
+        p = {}
+        begin = begin +1
+
+        if begin != end:
+            p['n'] = 500000
+
+            if begin != (end-1):
+                p['nwu'] = self.fake_hierarchy(begin, end)
+                p['nwd'] = self.fake_hierarchy(begin, end)
+                p['neu'] = self.fake_hierarchy(begin, end)
+                p['ned'] = self.fake_hierarchy(begin, end)
+                p['swu'] = self.fake_hierarchy(begin, end)
+                p['swd'] = self.fake_hierarchy(begin, end)
+                p['seu'] = self.fake_hierarchy(begin, end)
+                p['sed'] = self.fake_hierarchy(begin, end)
+
+        return p

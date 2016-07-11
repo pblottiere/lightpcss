@@ -49,3 +49,9 @@ class Read(Resource):
     def get(self):
         args = greyhound_read_parser.parse_args()
         return greyhound.GreyhoundRead().run(args)
+
+@greyhound_ns.route("/hierarchy")
+class Hierarchy(Resource):
+
+    def get(self):
+        return greyhound.GreyhoundHierarchy().run()
