@@ -58,7 +58,7 @@ class GreyhoundHierarchy(object):
 
     def fake_hierarchy(self, begin, end):
         p = {}
-        begin = begin +1
+        begin = begin + 1
 
         if begin != end:
             p['n'] = 500000
