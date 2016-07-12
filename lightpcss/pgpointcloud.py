@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from struct import pack
-import array
 import codecs
 import binascii
+import json
+import numpy
 
+from lazperf import Decompressor, Compressor, buildNumpyDescription
 from . import utils
 
 class PgPointCloud(object):
@@ -43,13 +45,11 @@ class PgPointCloud(object):
             scaled_point.x = int((pt[xpos] - offset[0]) / scale)
             scaled_point.y = int((pt[ypos] - offset[1]) / scale)
             scaled_point.z = int((pt[zpos] - offset[2]) / scale)
-
             scaled_points.append( scaled_point )
 
         # build a buffer with hexadecimal data
         hexbuffer = bytearray()
         for pt in scaled_points:
-            hexbuffer.extend(self.__hexa_signed_int32(pt.z))
             hexbuffer.extend(self.__hexa_signed_int32(pt.x))
             hexbuffer.extend(self.__hexa_signed_int32(pt.y))
             hexbuffer.extend(self.__hexa_signed_int32(pt.z))
@@ -58,6 +58,23 @@ class PgPointCloud(object):
             hexbuffer.extend(self.__hexa_signed_uint16(pt.red))
             hexbuffer.extend(self.__hexa_signed_uint16(pt.green))
             hexbuffer.extend(self.__hexa_signed_uint16(pt.blue))
+
+        # compress with laz
+        s = json.dumps(utils.GreyhoundReadSchema().json()).replace("\\","")
+        dtype = buildNumpyDescription(json.loads(s))
+
+        c = Compressor(s)
+        arr = numpy.fromstring(bytes(hexbuffer), dtype = dtype)
+        c = c.compress(arr)
+        hexbuffer = bytearray(numpy.asarray(c))
+
+        #d = Decompressor(c, s)
+        #output = numpy.zeros(len(scaled_points) * dtype.itemsize, dtype = numpy.uint8)
+        #decompressed = d.decompress(output)
+        #decompressed_str = numpy.ndarray.tostring( decompressed )
+
+        # add nomber of points as footer
+        hexbuffer.extend(self.__hexa_signed_int32(len(scaled_points)))
 
         return hexbuffer
 

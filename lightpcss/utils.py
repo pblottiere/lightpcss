@@ -72,9 +72,9 @@ class Dimension(object):
         self.size = size
 
     def json(self):
-        return json.dumps({"name" : self.name,
+        return {"name" : self.name,
             "size" : self.size,
-            "type" : self.typename})
+            "type" : self.typename}
 
 class Point(object):
 
@@ -87,3 +87,34 @@ class Point(object):
         self.red = 0
         self.green = 0
         self.blue = 0
+
+# -----------------------------------------------------------------------------
+# schema
+# -----------------------------------------------------------------------------
+class GreyhoundInfoSchema(Schema):
+
+    def __init__(self):
+        Schema.__init__(self)
+
+        self.dims.append(Dimension( "X", "floating", 8 ))
+        self.dims.append(Dimension( "Y", "floating", 8 ))
+        self.dims.append(Dimension( "Z", "floating", 8 ))
+        self.dims.append(Dimension( "Intensity", "unsigned", 2 ))
+        self.dims.append(Dimension( "Classification", "unsigned", 1 ))
+        self.dims.append(Dimension( "Red", "unsigned", 2 ))
+        self.dims.append(Dimension( "Green", "unsigned", 2 ))
+        self.dims.append(Dimension( "Blue", "unsigned", 2 ))
+
+class GreyhoundReadSchema(Schema):
+
+    def __init__(self):
+        Schema.__init__(self)
+
+        self.dims.append(Dimension( "X", "signed", 4 ))
+        self.dims.append(Dimension( "Y", "signed", 4 ))
+        self.dims.append(Dimension( "Z", "signed", 4 ))
+        self.dims.append(Dimension( "Intensity", "unsigned", 2 ))
+        self.dims.append(Dimension( "Classification", "unsigned", 1 ))
+        self.dims.append(Dimension( "Red", "unsigned", 2 ))
+        self.dims.append(Dimension( "Green", "unsigned", 2 ))
+        self.dims.append(Dimension( "Blue", "unsigned", 2 ))

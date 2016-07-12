@@ -4,34 +4,7 @@ from flask import Response
 
 from .database import Session
 from .utils import Dimension, Schema, decimal_default, list_from_str
-
-class GreyhoundInfoSchema(Schema):
-
-    def __init__(self):
-        Schema.__init__(self)
-
-        self.dims.append(Dimension( "X", "floating", 8 ))
-        self.dims.append(Dimension( "Y", "floating", 8 ))
-        self.dims.append(Dimension( "Z", "floating", 8 ))
-        self.dims.append(Dimension( "Intensity", "unsigned", 2 ))
-        self.dims.append(Dimension( "Classification", "unsigned", 1 ))
-        self.dims.append(Dimension( "Red", "unsigned", 2 ))
-        self.dims.append(Dimension( "Green", "unsigned", 2 ))
-        self.dims.append(Dimension( "Blue", "unsigned", 2 ))
-
-class GreyhoundReadSchema(Schema):
-
-    def __init__(self):
-        Schema.__init__(self)
-
-        self.dims.append(Dimension( "X", "signed", 4 ))
-        self.dims.append(Dimension( "Y", "signed", 4 ))
-        self.dims.append(Dimension( "Z", "signed", 4 ))
-        self.dims.append(Dimension( "Intensity", "unsigned", 2 ))
-        self.dims.append(Dimension( "Classification", "unsigned", 1 ))
-        self.dims.append(Dimension( "Red", "unsigned", 2 ))
-        self.dims.append(Dimension( "Green", "unsigned", 2 ))
-        self.dims.append(Dimension( "Blue", "unsigned", 2 ))
+from .utils import GreyhoundReadSchema, GreyhoundInfoSchema
 
 class GreyhoundInfo(object):
 

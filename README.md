@@ -10,6 +10,7 @@ Light Pointcloud Streaming Server
 * pytest
 * pytest-flask
 * pygdal
+* lazperf
 
 ## Usage
 
